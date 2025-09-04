@@ -1,121 +1,120 @@
 # Lexe Wrapper
 
-A simple Python utility for integrating with the Lexe Bitcoin Lightning Network wallet. This wrapper eliminates common setup gotchas when using the Lexe Sidecar SDK, making it easy for developers and coding agents to "get Lexe going" quickly.
+A simple Python package for integrating Bitcoin Lightning Network payments using the Lexe wallet. Install with pip and start building Lightning apps in minutes, not hours.
 
-## What This Wrapper Solves
+```bash
+pip install lexe-wrapper
+```
+
+## What This Package Solves
 
 The Lexe Sidecar API is already clean and simple, but there are several setup gotchas that slow down development:
 
 1. **Binary Management**: Downloading and extracting the correct Lexe sidecar binary
-2. **Process Management**: Starting and stopping the sidecar subprocess
+2. **Process Management**: Starting and stopping the sidecar subprocess  
 3. **Credentials Handling**: Properly encoding and validating base64 client credentials
 4. **Connection Management**: Ensuring the sidecar is healthy and ready to accept requests
 5. **Port Configuration**: Managing the correct port (5393) for communication
 
-This wrapper handles all of these automatically, so you can focus on using the Lexe API.
+This package handles all of these automatically, so you can focus on building great Lightning applications.
 
 ## Quick Start
 
-### 1. Get Your Lexe Client Credentials
+### 1. Install the Package
+
+```bash
+pip install lexe-wrapper
+```
+
+### 2. Get Your Lexe Credentials
 
 You need a Lexe wallet and client credentials. Follow the [Lexe SDK documentation](https://github.com/lexe-app/lexe-sidecar-sdk) to:
-1. Download the Lexe mobile app
-2. Create a wallet 
+1. Download the Lexe mobile app  
+2. Create a wallet
 3. Export client credentials (base64 encoded string)
 
-### 2. Set Up Environment
+### 3. Set Environment Variable
 
 ```bash
-# Set your credentials (required)
 export LEXE_CLIENT_CREDENTIALS="your_base64_encoded_credentials_here"
-
-# Install Python dependencies
-pip install requests
 ```
 
-### 3. Use the Wrapper
+### 4. Start Building
 
-#### Option A: Command Line Interface
-
-```bash
-# Download the sidecar binary
-python cli.py download
-
-# Start the sidecar (downloads binary automatically if needed)
-python cli.py start
-
-# Check status
-python cli.py status
-
-# Get node information
-python cli.py node-info
-
-# Stop the sidecar
-python cli.py stop
-```
-
-#### Option B: Python Code
+#### Simple Usage (Context Manager)
 
 ```python
-from lexe_manager import LexeManager
+from lexe_wrapper import LexeManager
 import requests
 
-# Initialize and start Lexe
+# Automatic setup and cleanup
 with LexeManager() as lexe:
-    # Start the sidecar (handles download, startup, health check)
-    lexe.start_sidecar()
+    lexe.start_sidecar()  # Downloads binary, starts process, health checks
     
-    # Now use the standard Lexe Sidecar API directly
-    # Create an invoice
+    # Now use the standard Lexe Sidecar API directly at localhost:5393
     response = requests.post("http://localhost:5393/v1/node/create_invoice", json={
         "amount": "1000", 
         "description": "Test payment"
     })
-    invoice_data = response.json()
+    invoice = response.json()
+    print(f"Created invoice: {invoice['invoice']}")
     
-    # Check payment status
-    response = requests.get("http://localhost:5393/v1/node/payment", 
-                          params={"index": invoice_data["index"]})
-    payment_status = response.json()
-    
-    # The sidecar automatically stops when exiting the context
+    # Sidecar automatically stops when exiting the context
 ```
 
-#### Option C: Manual Management
+#### Web App Integration
 
 ```python
-from lexe_manager import LexeManager
+from lexe_wrapper import LexeManager
 
-# Initialize
+# Initialize once when your web app starts
+lexe = LexeManager()
+lexe.start_for_webapp()  # Robust startup with error handling
+
+# Use throughout your app's lifetime
+@app.route('/create-invoice', methods=['POST'])
+def create_invoice():
+    response = requests.post("http://localhost:5393/v1/node/create_invoice", 
+                           json=request.json)
+    return response.json()
+
+# Stop when app shuts down
+lexe.stop_sidecar()
+```
+
+#### Manual Management
+
+```python
+from lexe_wrapper import LexeManager
+
 lexe = LexeManager()
 
-# Start manually
-lexe.start_sidecar()
-
-# Check if healthy
-if lexe.check_health():
-    print("Lexe is ready!")
+try:
+    lexe.start_sidecar()
     
-    # Get node info using the wrapper method
-    node_info = lexe.get_node_info()
-    print(f"Balance: {node_info['balance']} sats")
-
-# Stop when done
-lexe.stop_sidecar()
+    if lexe.check_health():
+        print("Lexe is ready!")
+        
+        # Get node info using the wrapper method
+        node_info = lexe.get_node_info()
+        print(f"Balance: {node_info['balance']} sats")
+        
+finally:
+    lexe.stop_sidecar()
 ```
 
 ## For Coding Agents
 
-When using this wrapper in automated coding environments:
+When using this package in automated coding environments:
 
 ### Essential Setup Steps
-1. **Set credentials**: `export LEXE_CLIENT_CREDENTIALS="your_credentials"`
-2. **Install dependency**: `pip install requests`
+1. **Install package**: `pip install lexe-wrapper`
+2. **Set credentials**: `export LEXE_CLIENT_CREDENTIALS="your_credentials"`
 3. **Import and start**: Use the context manager pattern for automatic cleanup
 
 ### Example Implementation
 ```python
-from lexe_manager import LexeManager
+from lexe_wrapper import LexeManager
 import requests
 
 def setup_lexe_integration():
@@ -132,15 +131,33 @@ def create_lightning_invoice(amount_sats, description):
     })
     return response.json()
 
-# The wrapper handles all the complexity - just use the API directly!
+# The package handles all the complexity - just use the API directly!
 ```
 
 ### Key Benefits for Automation
+- **Standard pip installation** - `pip install lexe-wrapper`
+- **Clean imports** - `from lexe_wrapper import LexeManager`
 - **Zero configuration files needed** - everything is handled programmatically
 - **Automatic binary management** - downloads and extracts the right version
 - **Built-in health checks** - ensures the connection is ready before returning
 - **Error handling** - clear error messages when credentials are invalid or missing
 - **Process lifecycle management** - clean startup and shutdown
+
+## Installation Methods
+
+### Option 1: Install from PyPI (Recommended)
+
+```bash
+pip install lexe-wrapper
+```
+
+### Option 2: Install from Source
+
+```bash
+git clone https://github.com/lexe-app/lexe-wrapper.git
+cd lexe-wrapper
+pip install -e .
+```
 
 ## API Reference
 
@@ -148,6 +165,8 @@ def create_lightning_invoice(amount_sats, description):
 
 #### Constructor
 ```python
+from lexe_wrapper import LexeManager
+
 LexeManager(client_credentials=None, port=5393)
 ```
 - `client_credentials`: Base64 encoded credentials (uses `LEXE_CLIENT_CREDENTIALS` env var if None)
@@ -159,6 +178,11 @@ LexeManager(client_credentials=None, port=5393)
 - Downloads binary if needed, starts process, optionally waits for health check
 - Returns: `bool` - True if started successfully
 
+**`start_for_webapp(health_timeout=30)`**
+- Web app specific startup with robust error handling
+- Returns: `bool` - True if started successfully
+- Raises: `RuntimeError` if startup fails
+
 **`stop_sidecar()`**
 - Gracefully stops the sidecar process
 - Returns: `bool` - True if stopped successfully
@@ -167,13 +191,17 @@ LexeManager(client_credentials=None, port=5393)
 - Checks if sidecar is responding to health checks
 - Returns: `bool` - True if healthy
 
+**`ensure_running()`**
+- Ensures sidecar is running and healthy (great for health check endpoints)
+- Returns: `bool` - True if running and healthy
+
+**`restart_if_needed()`**
+- Restarts sidecar if not running or unhealthy
+- Returns: `bool` - True if now running and healthy
+
 **`get_node_info()`**
 - Gets node information from Lexe API
 - Returns: `dict` - Node information including balance, channels, etc.
-
-**`download_sidecar_binary()`**
-- Downloads and extracts the latest Lexe sidecar binary
-- Returns: `str` - Path to extracted binary
 
 **`is_running()`**
 - Checks if the sidecar process is currently running
@@ -181,7 +209,13 @@ LexeManager(client_credentials=None, port=5393)
 
 ## CLI Reference
 
+The package includes a command-line interface for testing and development:
+
 ```bash
+# Using the installed package
+python -m lexe_wrapper <command> [options]
+
+# Or directly (if you cloned the repo)
 python cli.py <command> [options]
 
 Commands:
@@ -405,12 +439,37 @@ The wrapper provides clear error messages for common issues:
 - **Health check failures**: When sidecar doesn't respond within timeout
 - **Process management**: Issues starting or stopping the sidecar process
 
+## Package Structure
+
+```
+lexe-wrapper/
+├── lexe_wrapper/           # Main package
+│   ├── __init__.py        # Package exports LexeManager
+│   ├── manager.py         # Core LexeManager class
+│   └── __main__.py        # CLI entry point
+├── examples/              # Usage examples
+│   └── simple_usage.py    # Simple integration examples
+├── setup.py              # Package installation
+├── pyproject.toml        # Modern Python packaging
+└── README.md             # This documentation
+```
+
 ## Requirements
 
 - Python 3.7+
-- `requests` library
+- `requests` library (automatically installed as dependency)
 - x86_64 Linux environment (where Lexe sidecar runs)
 - Valid Lexe client credentials
+
+## Contributing
+
+Contributions are welcome! This package follows standard Python packaging conventions:
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
 ## License
 
@@ -418,4 +477,11 @@ MIT License - see LICENSE file for details.
 
 ## About
 
-This wrapper is designed to eliminate the friction in getting started with Lexe Bitcoin Lightning Network integration. The Lexe Sidecar API itself is excellent - this just handles the setup complexity so you can focus on building great Lightning applications.
+This package is designed to eliminate the friction in getting started with Lexe Bitcoin Lightning Network integration. The Lexe Sidecar API itself is excellent - this package just handles the setup complexity so you can focus on building great Lightning applications.
+
+**Key Design Principles:**
+- **Standard Python packaging** - Install with pip, import normally
+- **Minimal dependencies** - Only requires `requests`
+- **Clean API surface** - Simple import, clear methods
+- **Production ready** - Proper error handling, logging, and lifecycle management
+- **Direct API access** - No unnecessary abstraction over the Lexe Sidecar API
