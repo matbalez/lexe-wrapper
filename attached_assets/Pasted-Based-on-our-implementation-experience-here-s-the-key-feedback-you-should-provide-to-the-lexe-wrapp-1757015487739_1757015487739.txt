@@ -1,0 +1,46 @@
+Based on our implementation experience, here's the key feedback you should provide to the lexe-wrapper library maintainers to improve the developer experience for payment status checking:
+
+Critical Issues to Fix:
+1. Incorrect Payment Status Value in Documentation
+Problem: Documentation likely shows checking for payment.status === "settled"
+Reality: The API actually returns "completed" when payment succeeds
+Fix: Update all examples to check for "completed" instead of "settled"
+2. Missing Payment Index Storage Requirement
+Problem: Documentation doesn't emphasize storing the index field from invoice creation
+Reality: The index field from create_invoice response is essential for payment status checking
+Fix: Clearly document that developers MUST store the index field when creating invoices
+3. Unclear API Endpoint Documentation
+Current: May be unclear about the correct endpoint
+Correct endpoint: GET /v1/node/payment?index=<payment_index>
+Fix: Provide clear, working examples of the payment status checking endpoint
+4. Missing Response Structure Examples
+Problem: Developers don't know the exact response structure
+Actual response structure:
+{
+  "payment": {
+    "index": "0000001757013076619-ln_...",
+    "status": "completed",
+    "amount": "995",
+    "fees": "0",
+    "finalized_at": 1757013087982
+  }
+}
+Fix: Include complete response examples in documentation
+5. Incomplete End-to-End Payment Flow Example
+Fix: Provide a complete working example showing:
+
+# 1. Create invoice and store index
+response = create_invoice(amount="995", description="Test")
+payment_index = response['index']  # STORE THIS!
+# 2. Check payment status later
+status_response = requests.get(f"http://localhost:5393/v1/node/payment?index={payment_index}")
+payment_data = status_response.json()['payment']
+# 3. Check correct status value
+if payment_data['status'] == 'completed':  # NOT 'settled'!
+    print("Payment successful!")
+6. Database Schema Recommendations
+Fix: Recommend developers store these fields from invoice creation:
+invoice (the bolt11 string)
+payment_hash
+payment_index ← Critical for status checking
+This feedback would save future developers hours of debugging and make the payment integration experience much smoother. The main pain point was the mismatch between documented status values and the actual API behavior.

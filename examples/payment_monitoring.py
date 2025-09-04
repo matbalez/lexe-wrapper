@@ -41,7 +41,8 @@ def create_and_monitor_payment(amount_sats, description, timeout=300):
             return False, None
             
         invoice_data = invoice_response.json()
-        payment_index = invoice_data['index']  # This is the key for monitoring
+        payment_index = invoice_data['index']  # CRITICAL: Store this for payment monitoring!
+        payment_hash = invoice_data.get('payment_hash')  # Also store for your database
         bolt11 = invoice_data['invoice']
         
         print(f"✅ Invoice created!")
@@ -76,8 +77,8 @@ def wait_for_payment(payment_index, timeout=300):
                 status = payment['status']
                 print(f"🔍 Payment status: {status} - {payment.get('status_msg', '')}")
                 
-                # Check for payment completion
-                if status == 'settled' or status == 'completed':
+                # Check for payment completion - API returns 'completed' when payment succeeds
+                if status == 'completed':
                     print(f"🎉 Payment received!")
                     print(f"💸 Amount: {payment['amount']} sats")
                     print(f"📅 Finalized at: {payment.get('finalized_at')}")

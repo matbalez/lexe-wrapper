@@ -60,8 +60,13 @@ with LexeManager() as lexe:
         "expiration_secs": 3600  # 1 hour expiration
     })
     invoice_data = response.json()
+    
+    # CRITICAL: Store payment_index for monitoring payment completion
+    payment_index = invoice_data['index']  # Save this!
+    
     print(f"⚡ Lightning invoice created successfully!")
     print(f"📋 Invoice: {invoice_data.get('invoice', 'Generated')[:50]}...")
+    print(f"🔍 Payment index (save this): {payment_index}")
     
     # Sidecar automatically stops when exiting the context
 ```
@@ -160,6 +165,153 @@ git clone https://github.com/lexe-app/lexe-wrapper.git
 cd lexe-wrapper
 pip install -e .
 ```
+
+## ⚡ Payment Monitoring (Critical Information)
+
+Based on real developer feedback, here are the **essential patterns** for monitoring Lightning payments:
+
+### 🚨 Critical Fixes (Must Read!)
+
+**1. Payment Status Value**
+```python
+# ❌ WRONG - Documentation was incorrect
+if payment['status'] == 'settled':
+
+# ✅ CORRECT - API returns 'completed'
+if payment['status'] == 'completed':
+```
+
+**2. Store Payment Index**
+```python
+# When creating invoice, MUST store the 'index' field!
+response = requests.post("http://localhost:5393/v1/node/create_invoice", json={...})
+invoice_data = response.json()
+
+# CRITICAL: Store this for payment monitoring
+payment_index = invoice_data['index']  # Required for status checking
+payment_hash = invoice_data['payment_hash']  # Also recommended
+```
+
+**3. Correct API Endpoint**
+```python
+# Correct endpoint for payment status
+endpoint = f"http://localhost:5393/v1/node/payment?index={payment_index}"
+response = requests.get(endpoint)
+```
+
+### Complete Working Example
+
+```python
+from lexe_wrapper import LexeManager
+import requests
+import time
+
+def complete_payment_flow():
+    with LexeManager() as lexe:
+        lexe.start_sidecar()
+        
+        # 1. Create invoice and store essential fields
+        invoice_response = requests.post("http://localhost:5393/v1/node/create_invoice", json={
+            "amount": "1000",
+            "description": "Premium subscription",
+            "expiration_secs": 3600
+        })
+        
+        invoice_data = invoice_response.json()
+        
+        # CRITICAL: Store these fields in your database
+        payment_record = {
+            'invoice': invoice_data['invoice'],           # BOLT11 for user
+            'payment_hash': invoice_data['payment_hash'], # Unique ID
+            'payment_index': invoice_data['index'],       # REQUIRED for monitoring
+            'amount': 1000,
+            'status': 'pending'
+        }
+        
+        # 2. Show invoice to user
+        print(f"Pay this: {payment_record['invoice']}")
+        
+        # 3. Monitor payment completion
+        payment_index = payment_record['payment_index']
+        
+        while True:
+            # Check payment status using correct endpoint
+            response = requests.get(f"http://localhost:5393/v1/node/payment?index={payment_index}")
+            
+            if response.status_code == 200:
+                payment_data = response.json()
+                payment = payment_data['payment']
+                
+                # CORRECT: Check for 'completed' status
+                if payment['status'] == 'completed':
+                    print(f"🎉 Payment received! Amount: {payment['amount']} sats")
+                    # Update your database: status = 'completed'
+                    break
+                elif payment['status'] == 'pending':
+                    print("⏳ Still waiting...")
+                    time.sleep(3)  # Check every 3 seconds
+                else:
+                    print(f"❌ Payment failed: {payment['status']}")
+                    break
+            else:
+                print("Error checking payment status")
+                break
+```
+
+### Web App Integration (Flask)
+
+```python
+@app.route('/create-invoice', methods=['POST'])
+def create_invoice():
+    response = requests.post("http://localhost:5393/v1/node/create_invoice", json=request.json)
+    invoice_data = response.json()
+    
+    # CRITICAL: Store payment_index for monitoring
+    # Save to your database: invoice_data['index']
+    
+    return {'invoice': invoice_data['invoice'], 'payment_index': invoice_data['index']}
+
+@app.route('/check-payment/<payment_index>')
+def check_payment_status(payment_index):
+    try:
+        response = requests.get(f'http://localhost:5393/v1/node/payment?index={payment_index}')
+        
+        if response.status_code == 200:
+            payment = response.json()['payment']
+            
+            # CRITICAL: Check for 'completed' not 'settled'
+            return {
+                'paid': payment['status'] == 'completed',
+                'status': payment['status'],
+                'amount': payment['amount']
+            }
+        else:
+            return {'error': 'Payment not found'}, 404
+            
+    except Exception as e:
+        return {'error': str(e)}, 500
+```
+
+### Database Schema Recommendations
+
+```sql
+-- Store these fields when creating invoices
+CREATE TABLE lightning_payments (
+    id SERIAL PRIMARY KEY,
+    invoice TEXT NOT NULL,           -- BOLT11 string
+    payment_hash TEXT NOT NULL,      -- Unique payment identifier  
+    payment_index TEXT NOT NULL,     -- REQUIRED for status checking
+    amount_sats INTEGER NOT NULL,
+    description TEXT,
+    status VARCHAR(20) DEFAULT 'pending',  -- pending, completed, failed
+    created_at TIMESTAMP DEFAULT NOW(),
+    finalized_at TIMESTAMP,
+    
+    UNIQUE(payment_index)
+);
+```
+
+**📁 See `examples/correct_payment_flow.py` for complete, tested examples.**
 
 ## API Reference
 
