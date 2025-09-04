@@ -63,10 +63,27 @@ with LexeManager() as lexe:
     
     # CRITICAL: Store payment_index for monitoring payment completion
     payment_index = invoice_data['index']  # Save this!
+    invoice_string = invoice_data['invoice']
     
     print(f"⚡ Lightning invoice created successfully!")
-    print(f"📋 Invoice: {invoice_data.get('invoice', 'Generated')[:50]}...")
+    print(f"📋 Invoice: {invoice_string[:50]}...")
     print(f"🔍 Payment index (save this): {payment_index}")
+    
+    # Quick example of checking payment status (see detailed example below)
+    import time
+    time.sleep(2)  # Wait a moment before checking
+    
+    # Check payment status - NOTICE THE NESTED STRUCTURE!
+    status_response = requests.get(
+        f"http://localhost:5393/v1/node/payment?index={payment_index}"
+    )
+    payment_data = status_response.json()
+    payment = payment_data['payment']  # ← CRITICAL: Access nested 'payment' object!
+    
+    if payment['status'] == 'pending':
+        print("⏳ Payment is pending...")
+    elif payment['status'] == 'completed':
+        print("✅ Payment received!")
     
     # Sidecar automatically stops when exiting the context
 ```
@@ -122,9 +139,12 @@ with LexeManager() as lexe:
         status_response = requests.get(
             f"http://localhost:5393/v1/node/payment?index={payment_index}"
         )
-        payment = status_response.json()
+        payment_data = status_response.json()
         
-        # Step 4: Check for completion
+        # Step 4: CRITICAL - Access the nested 'payment' object
+        payment = payment_data['payment']  # ← The response has nested structure!
+        
+        # Now check the status from the nested payment object
         if payment['status'] == 'completed':  # ← "completed" NOT "settled"!
             print(f"✅ Payment received: {payment['amount']} sats")
             # Update your database, trigger order fulfillment, etc.
@@ -139,6 +159,36 @@ with LexeManager() as lexe:
         time.sleep(2)  # Poll every 2 seconds
     else:
         print("⏰ Payment timeout - invoice expired")
+```
+
+### API Response Structure
+
+**CRITICAL:** The payment status endpoint returns a **nested structure**:
+
+```json
+{
+  "payment": {
+    "index": "payment_12345",
+    "status": "completed",    // or "pending", "failed", "cancelled", "expired"
+    "amount": "10000",
+    "description": "Payment for order #123",
+    "created_at": "2024-01-01T12:00:00Z",
+    "paid_at": "2024-01-01T12:05:00Z"
+  }
+}
+```
+
+**Always access the nested payment object:**
+```python
+# CORRECT - Access nested structure
+payment_data = response.json()
+payment = payment_data['payment']  # Access the nested 'payment' object first!
+if payment['status'] == 'completed':
+    # Process successful payment
+
+# WRONG - Don't access status directly
+payment = response.json()
+if payment['status'] == 'completed':  # ❌ This will fail!
 ```
 
 ### Payment Status Values

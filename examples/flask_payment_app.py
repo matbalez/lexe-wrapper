@@ -87,7 +87,9 @@ def monitor_payment(payment_index, timeout_seconds=600):
             )
             
             if response.status_code == 200:
-                payment = response.json()
+                payment_data = response.json()
+                # CRITICAL: Access the nested 'payment' object
+                payment = payment_data['payment']  # The API returns nested structure!
                 status = payment.get('status', 'unknown')
                 
                 # Check for completion (NOT 'settled'!)
