@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.7"
 license = {text = "MIT"}
 authors = [
-    {name = "Lexe Wrapper Team", email = "support@example.com"},
+    {name = "Mat Balez", email = "matbalez@gmail.com"},
 ]
 keywords = ["bitcoin", "lightning", "network", "lexe", "wallet", "cryptocurrency", "unofficial", "open-source", "wrapper"]
 classifiers = [

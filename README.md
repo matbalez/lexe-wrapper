@@ -479,7 +479,7 @@ Contributions are welcome! This is an open-source project and we encourage commu
 
 **MIT License** - This project is free and open-source software. See the [LICENSE](LICENSE) file for full details.
 
-Copyright (c) 2025 Lexe Wrapper Team
+Copyright (c) 2025 Mat Balez
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software.
 
@@ -509,3 +509,9 @@ This package is designed to eliminate the friction in getting started with Lexe 
 - Official Lexe Website: [lexe.app](https://lexe.app)
 - Official Lexe Sidecar SDK: [github.com/lexe-app/lexe-sidecar-sdk](https://github.com/lexe-app/lexe-sidecar-sdk)
 - Lexe Documentation: Follow official Lexe channels for authoritative information
+
+## Author
+
+**Created and maintained by [Mat Balez](mailto:matbalez@gmail.com)**
+
+This project was developed to help the Python community easily integrate Bitcoin Lightning Network payments using Lexe's excellent infrastructure, with a focus on eliminating common setup friction points.

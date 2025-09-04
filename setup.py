@@ -16,8 +16,8 @@ requirements = ["requests>=2.31.0"]
 setup(
     name="lexe-wrapper",
     version="1.0.0",
-    author="Lexe Wrapper Team",
-    author_email="support@example.com",
+    author="Mat Balez",
+    author_email="matbalez@gmail.com",
     description="Unofficial, open-source Python wrapper for Lexe Bitcoin Lightning Network wallet integration",
     long_description=long_description,
     long_description_content_type="text/markdown",

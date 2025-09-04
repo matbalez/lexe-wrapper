@@ -17,8 +17,8 @@ License: MIT (see LICENSE file)
 from .manager import LexeManager
 
 __version__ = "1.0.0"
-__author__ = "Lexe Wrapper Team"
-__email__ = "support@example.com"
+__author__ = "Mat Balez"
+__email__ = "matbalez@gmail.com"
 
 # Make LexeManager available at package level
 __all__ = ['LexeManager']
