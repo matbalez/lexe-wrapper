@@ -15,15 +15,15 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Lexe Demo CLI"
+args = "Package Demo"
 
 [[workflows.workflow]]
-name = "Lexe Demo CLI"
+name = "Package Demo"
 author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python -m lexe_wrapper --help"
+args = "python -m lexe_wrapper --info"
 
 [workflows.workflow.metadata]
 outputType = "console"
