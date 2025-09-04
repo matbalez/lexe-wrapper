@@ -23,7 +23,9 @@ This package handles all of these automatically, so you can focus on building gr
 ### 1. Install the Package
 
 ```bash
-pip install lexe-wrapper
+git clone https://github.com/lexe-app/lexe-wrapper.git
+cd lexe-wrapper
+pip install -e .
 ```
 
 ### 2. Get Your Lexe Credentials
@@ -108,7 +110,7 @@ finally:
 When using this package in automated coding environments:
 
 ### Essential Setup Steps
-1. **Install package**: `pip install lexe-wrapper`
+1. **Install package**: Clone repo and `pip install -e .`
 2. **Set credentials**: `export LEXE_CLIENT_CREDENTIALS="your_credentials"`
 3. **Import and start**: Use the context manager pattern for automatic cleanup
 
@@ -145,19 +147,17 @@ def create_lightning_invoice(amount_sats, description):
 
 ## Installation Methods
 
-### Option 1: Install from PyPI (Recommended)
+### Install from Source
 
-```bash
-pip install lexe-wrapper
-```
-
-### Option 2: Install from Source
+Since this package is not yet published to PyPI, install directly from source:
 
 ```bash
 git clone https://github.com/lexe-app/lexe-wrapper.git
 cd lexe-wrapper
 pip install -e .
 ```
+
+*Note: PyPI publishing coming soon for simple `pip install lexe-wrapper` experience.*
 
 ## API Reference
 

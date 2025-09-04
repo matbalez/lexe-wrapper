@@ -39,7 +39,7 @@ def main():
             "description": "Example payment"
         })
         invoice = invoice_response.json()
-        print(f"🧾 Created invoice: {invoice['index']}")
+        print(f"🧾 Created invoice: {invoice.get('invoice', 'Success')[:50]}...")
         
     finally:
         lexe.stop_sidecar()
