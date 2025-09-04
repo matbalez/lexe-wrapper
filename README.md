@@ -200,6 +200,191 @@ Options:
   --verbose           Enable verbose logging
 ```
 
+## Web App Integration (Long-Lived Connections)
+
+The wrapper is specifically designed to support long-lived connections for web applications. Here's how to integrate it:
+
+### Flask Example
+
+```python
+from flask import Flask, jsonify, request
+from lexe_manager import LexeManager
+import requests
+import atexit
+
+app = Flask(__name__)
+
+# Global Lexe manager instance
+lexe_manager = None
+
+def init_lexe():
+    """Initialize Lexe sidecar when app starts"""
+    global lexe_manager
+    lexe_manager = LexeManager()
+    
+    try:
+        # Use the web app specific startup method
+        lexe_manager.start_for_webapp(health_timeout=30)
+        print("✅ Lexe sidecar started successfully")
+        return True
+    except RuntimeError as e:
+        print(f"❌ Failed to start Lexe: {e}")
+        return False
+
+def cleanup_lexe():
+    """Clean shutdown when app stops"""
+    global lexe_manager
+    if lexe_manager:
+        lexe_manager.stop_sidecar()
+        print("🛑 Lexe sidecar stopped")
+
+# Initialize Lexe when app starts
+with app.app_context():
+    if not init_lexe():
+        exit(1)
+
+# Register cleanup function
+atexit.register(cleanup_lexe)
+
+@app.route('/health')
+def health_check():
+    """App health check - includes Lexe status"""
+    if lexe_manager and lexe_manager.ensure_running():
+        return jsonify({"status": "healthy", "lexe": "connected"})
+    else:
+        return jsonify({"status": "degraded", "lexe": "disconnected"}), 503
+
+@app.route('/node-info')
+def node_info():
+    """Get Lexe node information"""
+    try:
+        # Use direct API call (the whole point of this wrapper!)
+        response = requests.get("http://localhost:5393/v1/node/node_info", timeout=10)
+        response.raise_for_status()
+        return jsonify(response.json())
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/create-invoice', methods=['POST'])
+def create_invoice():
+    """Create a Lightning invoice"""
+    try:
+        amount = request.json.get('amount', '1000')
+        description = request.json.get('description', 'Payment')
+        
+        # Direct Lexe API usage
+        response = requests.post("http://localhost:5393/v1/node/create_invoice", 
+                               json={
+                                   "amount": str(amount),
+                                   "description": description
+                               }, timeout=15)
+        response.raise_for_status()
+        return jsonify(response.json())
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/restart-lexe', methods=['POST'])
+def restart_lexe():
+    """Restart Lexe if having issues"""
+    if lexe_manager and lexe_manager.restart_if_needed():
+        return jsonify({"status": "restarted"})
+    else:
+        return jsonify({"error": "restart failed"}), 500
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
+```
+
+### FastAPI Example
+
+```python
+from fastapi import FastAPI, HTTPException
+from contextlib import asynccontextmanager
+from lexe_manager import LexeManager
+import requests
+
+# Global Lexe manager
+lexe_manager = None
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    global lexe_manager
+    lexe_manager = LexeManager()
+    
+    try:
+        lexe_manager.start_for_webapp()
+        print("✅ Lexe sidecar started")
+        yield
+    except RuntimeError as e:
+        print(f"❌ Lexe startup failed: {e}")
+        raise
+    finally:
+        # Shutdown
+        if lexe_manager:
+            lexe_manager.stop_sidecar()
+            print("🛑 Lexe sidecar stopped")
+
+app = FastAPI(lifespan=lifespan)
+
+@app.get("/health")
+def health_check():
+    if lexe_manager and lexe_manager.ensure_running():
+        return {"status": "healthy", "lexe": "connected"}
+    raise HTTPException(503, "Lexe not available")
+
+@app.post("/invoices")
+def create_invoice(amount: int, description: str = "Payment"):
+    try:
+        response = requests.post("http://localhost:5393/v1/node/create_invoice",
+                               json={"amount": str(amount), "description": description})
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        raise HTTPException(500, str(e))
+```
+
+### Web App Best Practices
+
+1. **Startup Pattern**: Use `start_for_webapp()` during app initialization
+2. **Health Monitoring**: Use `ensure_running()` in your health check endpoints
+3. **Recovery**: Use `restart_if_needed()` for automatic recovery
+4. **Shutdown**: Ensure `stop_sidecar()` is called when your app shuts down
+5. **Direct API Usage**: Once started, use standard HTTP requests to `localhost:5393`
+
+### Process Management for Production
+
+```python
+import signal
+import sys
+from lexe_manager import LexeManager
+
+# Global manager for signal handlers
+lexe_manager = None
+
+def signal_handler(signum, frame):
+    """Handle shutdown signals gracefully"""
+    global lexe_manager
+    print("🔄 Received shutdown signal, stopping Lexe...")
+    if lexe_manager:
+        lexe_manager.stop_sidecar()
+    sys.exit(0)
+
+# Register signal handlers for graceful shutdown
+signal.signal(signal.SIGINT, signal_handler)   # Ctrl+C
+signal.signal(signal.SIGTERM, signal_handler)  # Docker/systemd stop
+
+def main():
+    global lexe_manager
+    lexe_manager = LexeManager()
+    
+    # Start for long-lived operation
+    lexe_manager.start_for_webapp()
+    
+    # Your web app code here
+    # The sidecar stays running until explicitly stopped
+```
+
 ## After Starting the Sidecar
 
 Once the wrapper starts the sidecar, you can use the [standard Lexe Sidecar API](https://github.com/lexe-app/lexe-sidecar-sdk#rest-api-reference) directly:

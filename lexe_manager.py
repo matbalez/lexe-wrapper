@@ -291,3 +291,62 @@ class LexeManager:
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Context manager exit - ensures sidecar is stopped."""
         self.stop_sidecar()
+    
+    def start_for_webapp(self, health_timeout: int = 30) -> bool:
+        """
+        Start the sidecar for a web application with appropriate error handling.
+        This method is specifically designed for web app initialization.
+        
+        Args:
+            health_timeout: Timeout in seconds for health check
+            
+        Returns:
+            True if started successfully and ready for web app use
+            
+        Raises:
+            RuntimeError: If startup fails with detailed error message
+        """
+        try:
+            if not self.start_sidecar(wait_for_health=True, health_timeout=health_timeout):
+                raise RuntimeError("Failed to start Lexe sidecar - check credentials and network connectivity")
+            
+            logger.info(f"Lexe sidecar ready for web app at {self.base_url}")
+            return True
+            
+        except Exception as e:
+            error_msg = f"Web app Lexe initialization failed: {e}"
+            logger.error(error_msg)
+            raise RuntimeError(error_msg) from e
+    
+    def ensure_running(self) -> bool:
+        """
+        Ensure the sidecar is running and healthy. Useful for web app health checks.
+        
+        Returns:
+            True if running and healthy, False otherwise
+        """
+        return self.is_running() and self.check_health()
+    
+    def restart_if_needed(self) -> bool:
+        """
+        Restart the sidecar if it's not running or unhealthy.
+        Useful for web app recovery scenarios.
+        
+        Returns:
+            True if now running and healthy, False if restart failed
+        """
+        if self.ensure_running():
+            return True
+        
+        logger.warning("Sidecar not healthy, attempting restart...")
+        
+        # Stop if partially running
+        if self.is_running():
+            self.stop_sidecar()
+        
+        # Restart
+        try:
+            return self.start_sidecar(wait_for_health=True)
+        except Exception as e:
+            logger.error(f"Failed to restart sidecar: {e}")
+            return False
