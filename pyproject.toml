@@ -5,14 +5,14 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "lexe-wrapper"
 version = "1.0.0"
-description = "Simple Python wrapper for Lexe Bitcoin Lightning Network wallet integration"
+description = "Unofficial, open-source Python wrapper for Lexe Bitcoin Lightning Network wallet integration"
 readme = "README.md"
 requires-python = ">=3.7"
 license = {text = "MIT"}
 authors = [
     {name = "Lexe Wrapper Team", email = "support@example.com"},
 ]
-keywords = ["bitcoin", "lightning", "network", "lexe", "wallet", "cryptocurrency"]
+keywords = ["bitcoin", "lightning", "network", "lexe", "wallet", "cryptocurrency", "unofficial", "open-source", "wrapper"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",

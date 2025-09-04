@@ -18,7 +18,7 @@ setup(
     version="1.0.0",
     author="Lexe Wrapper Team",
     author_email="support@example.com",
-    description="Simple Python wrapper for Lexe Bitcoin Lightning Network wallet integration",
+    description="Unofficial, open-source Python wrapper for Lexe Bitcoin Lightning Network wallet integration",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/lexe-app/lexe-wrapper",
@@ -53,7 +53,7 @@ setup(
     },
     include_package_data=True,
     zip_safe=False,
-    keywords="bitcoin lightning network lexe wallet cryptocurrency",
+    keywords="bitcoin lightning network lexe wallet cryptocurrency unofficial open-source wrapper",
     project_urls={
         "Bug Reports": "https://github.com/lexe-app/lexe-wrapper/issues",
         "Source": "https://github.com/lexe-app/lexe-wrapper",

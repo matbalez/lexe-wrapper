@@ -6,6 +6,8 @@ A simple Python package for integrating Bitcoin Lightning Network payments using
 pip install lexe-wrapper
 ```
 
+> **⚠️ Important:** This is an unofficial, open-source wrapper around the Lexe Sidecar SDK. It is not officially associated with or endorsed by Lexe. This project is independently developed to help developers integrate with Lexe's Lightning wallet services.
+
 ## What This Package Solves
 
 The Lexe Sidecar API is already clean and simple, but there are several setup gotchas that slow down development:
@@ -463,7 +465,7 @@ lexe-wrapper/
 
 ## Contributing
 
-Contributions are welcome! This package follows standard Python packaging conventions:
+Contributions are welcome! This is an open-source project and we encourage community involvement:
 
 1. Fork the repository
 2. Create a feature branch
@@ -471,9 +473,15 @@ Contributions are welcome! This package follows standard Python packaging conven
 4. Add tests if applicable
 5. Submit a pull request
 
+**Code of Conduct:** Please be respectful and constructive in all interactions.
+
 ## License
 
-MIT License - see LICENSE file for details.
+**MIT License** - This project is free and open-source software. See the [LICENSE](LICENSE) file for full details.
+
+Copyright (c) 2025 Lexe Wrapper Team
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software.
 
 ## About
 
@@ -485,3 +493,19 @@ This package is designed to eliminate the friction in getting started with Lexe 
 - **Clean API surface** - Simple import, clear methods
 - **Production ready** - Proper error handling, logging, and lifecycle management
 - **Direct API access** - No unnecessary abstraction over the Lexe Sidecar API
+
+## Open Source & Legal
+
+**📝 License:** This project is released under the [MIT License](LICENSE), making it free to use, modify, and distribute.
+
+**⚖️ Disclaimer:** This is an **unofficial, community-developed wrapper** around the Lexe Sidecar SDK. It is **not officially associated with, endorsed by, or supported by Lexe**. This project was independently created to help Python developers integrate with Lexe's Lightning wallet services more easily.
+
+**🔧 Open Source:** 
+- **Source Code:** Available on GitHub for transparency and community contributions
+- **Issues & Contributions:** Welcome! Please submit bug reports and feature requests
+- **No Warranty:** Provided "as is" - please review the code and test thoroughly before production use
+
+**🔗 Official Lexe Resources:**
+- Official Lexe Website: [lexe.app](https://lexe.app)
+- Official Lexe Sidecar SDK: [github.com/lexe-app/lexe-sidecar-sdk](https://github.com/lexe-app/lexe-sidecar-sdk)
+- Lexe Documentation: Follow official Lexe channels for authoritative information
