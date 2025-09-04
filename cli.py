@@ -10,7 +10,7 @@ import os
 import sys
 import json
 from pathlib import Path
-from lexe_manager import LexeManager
+from lexe_wrapper import LexeManager
 
 
 def main():

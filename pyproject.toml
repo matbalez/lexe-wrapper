@@ -1,0 +1,62 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lexe-wrapper"
+version = "1.0.0"
+description = "Simple Python wrapper for Lexe Bitcoin Lightning Network wallet integration"
+readme = "README.md"
+requires-python = ">=3.7"
+license = {text = "MIT"}
+authors = [
+    {name = "Lexe Wrapper Team", email = "support@example.com"},
+]
+keywords = ["bitcoin", "lightning", "network", "lexe", "wallet", "cryptocurrency"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Office/Business :: Financial",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "requests>=2.31.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=6.0",
+    "black",
+    "flake8",
+]
+
+[project.urls]
+Homepage = "https://github.com/lexe-app/lexe-wrapper"
+"Bug Reports" = "https://github.com/lexe-app/lexe-wrapper/issues"
+"Source" = "https://github.com/lexe-app/lexe-wrapper"
+
+[project.scripts]
+lexe-wrapper = "cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "."}
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["lexe_wrapper*"]
+
+[tool.black]
+line-length = 100
+target-version = ['py37']
+
+[tool.flake8]
+max-line-length = 100
+extend-ignore = ["E203", "W503"]
