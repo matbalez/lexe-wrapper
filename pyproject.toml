@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
+requires = ["setuptools>=45", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "lexe-wrapper"
-version = "1.0.0"
+version = "1.1.0"
 description = "Unofficial, open-source Python wrapper for Lexe Bitcoin Lightning Network wallet integration"
 readme = "README.md"
 requires-python = ">=3.7"

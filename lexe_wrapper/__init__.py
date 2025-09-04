@@ -16,7 +16,7 @@ License: MIT (see LICENSE file)
 
 from .manager import LexeManager
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __author__ = "Mat Balez"
 __email__ = "matbalez@gmail.com"
 
