@@ -1,6 +1,6 @@
 # Lexe Wrapper
 
-A simple Python package for integrating Bitcoin Lightning Network payments using the Lexe wallet. Install with pip and start building Lightning apps in minutes, not hours.
+A simple Python package for integrating Bitcoin Lightning Network payments using the Lexe wallet. Install with pip and start building Lightning apps in under 30 seconds.
 
 ```bash
 pip install lexe-wrapper
@@ -18,32 +18,25 @@ The Lexe Sidecar API is already clean and simple, but there are several setup go
 
 This package handles all of these automatically, so you can focus on building great Lightning applications.
 
-## Quick Start
+## ⚡ Quick Start (30 seconds)
 
-### 1. Install the Package
+### 1. Install from PyPI
 
 ```bash
-git clone https://github.com/lexe-app/lexe-wrapper.git
-cd lexe-wrapper
-pip install -e .
+pip install lexe-wrapper
 ```
 
-### 2. Get Your Lexe Credentials
-
-You need a Lexe wallet and client credentials. Follow the [Lexe SDK documentation](https://github.com/lexe-app/lexe-sidecar-sdk) to:
-1. Download the Lexe mobile app  
-2. Create a wallet
-3. Export client credentials (base64 encoded string)
-
-### 3. Set Environment Variable
+### 2. Set Your Lexe Credentials
 
 ```bash
 export LEXE_CLIENT_CREDENTIALS="your_base64_encoded_credentials_here"
 ```
 
-### 4. Start Building
+*Need credentials? Get them from the [Lexe mobile app](https://github.com/lexe-app/lexe-sidecar-sdk) - create a wallet and export client credentials.*
 
-#### Simple Usage (Context Manager)
+### 3. Start Building Lightning Apps
+
+#### Copy-Paste Example
 
 ```python
 from lexe_wrapper import LexeManager
@@ -53,16 +46,25 @@ import requests
 with LexeManager() as lexe:
     lexe.start_sidecar()  # Downloads binary, starts process, health checks
     
-    # Now use the standard Lexe Sidecar API directly at localhost:5393
+    # Get node info and balance
+    node_response = requests.get("http://localhost:5393/v1/node/node_info")
+    node_info = node_response.json()
+    print(f"💰 Wallet balance: {node_info['balance']} sats")
+    
+    # Create a Lightning invoice (uses standard Lexe API at localhost:5393)
     response = requests.post("http://localhost:5393/v1/node/create_invoice", json={
         "amount": "1000", 
-        "description": "Test payment"
+        "description": "Test payment",
+        "expiration_secs": 3600  # 1 hour expiration
     })
-    invoice = response.json()
-    print(f"Created invoice: {invoice['invoice']}")
+    invoice_data = response.json()
+    print(f"⚡ Lightning invoice created successfully!")
+    print(f"📋 Invoice: {invoice_data.get('invoice', 'Generated')[:50]}...")
     
     # Sidecar automatically stops when exiting the context
 ```
+
+**That's it!** Lightning payments are now working in your Python app. 🎉
 
 #### Web App Integration
 
@@ -110,7 +112,7 @@ finally:
 When using this package in automated coding environments:
 
 ### Essential Setup Steps
-1. **Install package**: Clone repo and `pip install -e .`
+1. **Install package**: `pip install lexe-wrapper`
 2. **Set credentials**: `export LEXE_CLIENT_CREDENTIALS="your_credentials"`
 3. **Import and start**: Use the context manager pattern for automatic cleanup
 
@@ -137,7 +139,7 @@ def create_lightning_invoice(amount_sats, description):
 ```
 
 ### Key Benefits for Automation
-- **Standard pip installation** - `pip install lexe-wrapper`
+- **Standard pip installation** - `pip install lexe-wrapper` (published on PyPI)
 - **Clean imports** - `from lexe_wrapper import LexeManager`
 - **Zero configuration files needed** - everything is handled programmatically
 - **Automatic binary management** - downloads and extracts the right version
@@ -145,19 +147,17 @@ def create_lightning_invoice(amount_sats, description):
 - **Error handling** - clear error messages when credentials are invalid or missing
 - **Process lifecycle management** - clean startup and shutdown
 
-## Installation Methods
+## Advanced Usage
 
-### Install from Source
+### For Development from Source
 
-Since this package is not yet published to PyPI, install directly from source:
+If you want to contribute or modify the package:
 
 ```bash
 git clone https://github.com/lexe-app/lexe-wrapper.git
 cd lexe-wrapper
 pip install -e .
 ```
-
-*Note: PyPI publishing coming soon for simple `pip install lexe-wrapper` experience.*
 
 ## API Reference
 
