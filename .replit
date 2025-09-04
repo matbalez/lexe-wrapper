@@ -27,3 +27,7 @@ args = "python cli.py status"
 
 [workflows.workflow.metadata]
 outputType = "console"
+
+[[ports]]
+localPort = 5393
+externalPort = 80

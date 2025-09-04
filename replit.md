@@ -8,6 +8,7 @@ A simple Python utility for integrating with the Lexe Bitcoin Lightning Network 
 - All core functionality implemented: binary download, process management, credentials handling, health checking
 - CLI interface created for testing and demonstration
 - Comprehensive documentation written for developers and coding agents
+- Successfully tested with real Lexe node: connected, retrieved node info, created invoices, confirmed API access
 
 ## User Preferences
 - Focus on simplicity and clean interfaces
