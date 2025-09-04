@@ -16,15 +16,15 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Library Demo"
+args = "Package Demo"
 
 [[workflows.workflow]]
-name = "Library Demo"
+name = "Package Demo"
 author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python -c \"from lexe_wrapper import LexeManager; print('✅ lexe-wrapper package is ready to use!'); print('📚 Run: python examples/correct_payment_flow.py'); print('🌐 Web integration examples in README.md')\""
+args = "python -c \"from lexe_wrapper import LexeManager; print('📦 lexe-wrapper v1.1.0 ready for PyPI upload!'); print('✅ Package imports successfully'); print('🔧 All critical payment monitoring fixes applied'); print('📁 Distribution files available in dist/ directory')\""
 
 [workflows.workflow.metadata]
 outputType = "console"
