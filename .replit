@@ -22,12 +22,12 @@ args = "Package Demo"
 name = "Package Demo"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "python -c \"from lexe_wrapper import LexeManager; print('📦 lexe-wrapper v1.1.0 ready for PyPI upload!'); print('✅ Package imports successfully'); print('🔧 All critical payment monitoring fixes applied'); print('📁 Distribution files available in dist/ directory')\""
-
 [workflows.workflow.metadata]
 outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python -c \"from lexe_wrapper import LexeManager; print('📦 lexe-wrapper v1.2.0 LIVE on PyPI!'); print('✅ Payment tracking now front and center'); print('🚨 Index vs hash confusion eliminated'); print('📋 Complete Flask example included'); print('🎉 Install: pip install lexe-wrapper==1.2.0')\""
 
 [[ports]]
 localPort = 5393

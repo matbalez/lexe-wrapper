@@ -73,7 +73,128 @@ with LexeManager() as lexe:
 
 **That's it!** Lightning payments are now working in your Python app. 🎉
 
-#### Web App Integration
+## 🚨 Payment Tracking (CRITICAL - READ THIS FIRST!)
+
+**Most developers miss this crucial step:** After creating an invoice, you MUST properly monitor for payment completion. This is the #1 integration issue.
+
+### ⚠️ Index vs Hash - Critical Distinction
+
+<div style="background-color: #fff3cd; border: 2px solid #ffc107; padding: 15px; border-radius: 5px;">
+<strong>🚨 IMPORTANT: Use the `index` field, NOT payment_hash!</strong><br><br>
+Unlike most Lightning APIs that use payment hashes, Lexe uses an <strong>index</strong> field for payment tracking:
+<ul>
+<li>✅ CORRECT: Use <code>invoice_data['index']</code> from invoice creation</li>
+<li>❌ WRONG: Do NOT use payment_hash or invoice string for status checks</li>
+</ul>
+</div>
+
+### Complete Payment Lifecycle Example
+
+```python
+from lexe_wrapper import LexeManager
+import requests
+import time
+
+with LexeManager() as lexe:
+    lexe.start_sidecar()
+    
+    # Step 1: Create invoice and GET THE INDEX
+    response = requests.post("http://localhost:5393/v1/node/create_invoice", json={
+        "amount": "10000",  # 10,000 sats
+        "description": "Payment for order #123",
+        "expiration_secs": 600  # 10 minutes
+    })
+    invoice_data = response.json()
+    
+    # Step 2: CRITICAL - Store the payment index (NOT the invoice string!)
+    payment_index = invoice_data['index']  # ← THIS IS WHAT YOU NEED!
+    invoice_string = invoice_data['invoice']  # This is for the payer
+    
+    print(f"⚡ Invoice created: {invoice_string[:50]}...")
+    print(f"📍 Payment Index: {payment_index}")  # Save this to your database!
+    
+    # Step 3: Monitor for payment completion
+    print("⏳ Waiting for payment...")
+    timeout = time.time() + 600  # 10 minute timeout
+    
+    while time.time() < timeout:
+        # Check payment status using the INDEX
+        status_response = requests.get(
+            f"http://localhost:5393/v1/node/payment?index={payment_index}"
+        )
+        payment = status_response.json()
+        
+        # Step 4: Check for completion
+        if payment['status'] == 'completed':  # ← "completed" NOT "settled"!
+            print(f"✅ Payment received: {payment['amount']} sats")
+            # Update your database, trigger order fulfillment, etc.
+            break
+        elif payment['status'] == 'failed':
+            print("❌ Payment failed")
+            break
+        elif payment['status'] == 'cancelled':
+            print("🚫 Payment cancelled")
+            break
+            
+        time.sleep(2)  # Poll every 2 seconds
+    else:
+        print("⏰ Payment timeout - invoice expired")
+```
+
+### Payment Status Values
+
+| Status | Meaning | Action Required |
+|--------|---------|-----------------|
+| `pending` | Invoice created, awaiting payment | Continue polling |
+| `completed` | ✅ Payment received successfully | Stop polling, fulfill order |
+| `failed` | Payment attempt failed | Stop polling, handle failure |
+| `cancelled` | Invoice was cancelled | Stop polling |
+| `expired` | Invoice expired without payment | Stop polling |
+
+**Important:** The successful payment status is `completed`, NOT `settled` (common Lightning convention).
+
+### Database Storage Pattern
+
+```sql
+-- Store payment tracking data properly
+CREATE TABLE lightning_payments (
+    id SERIAL PRIMARY KEY,
+    payment_index VARCHAR(255) UNIQUE NOT NULL,  -- Critical: store the index!
+    invoice_string TEXT NOT NULL,                -- For displaying to payer
+    amount_sats BIGINT NOT NULL,
+    description TEXT,
+    status VARCHAR(50) DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    paid_at TIMESTAMP,
+    metadata JSONB
+);
+
+-- Example: After creating invoice
+INSERT INTO lightning_payments (payment_index, invoice_string, amount_sats, description)
+VALUES ($1, $2, $3, $4)
+RETURNING id;
+
+-- Example: Check status
+UPDATE lightning_payments 
+SET status = 'completed', paid_at = NOW()
+WHERE payment_index = $1;
+```
+
+## Quick API Reference
+
+### Key Endpoints You'll Use
+
+| Endpoint | Method | Purpose | Critical Notes |
+|----------|--------|---------|----------------|
+| `/v1/node/create_invoice` | POST | Create Lightning invoice | **Returns `index` field - SAVE THIS!** |
+| `/v1/node/payment?index={index}` | GET | Check payment status | **Use `index` from invoice creation** |
+| `/v1/node/node_info` | GET | Get node info & balance | Returns balance in sats |
+| `/v1/node/pay_invoice` | POST | Pay a Lightning invoice | Send payments |
+| `/v1/node/decode_invoice` | POST | Decode invoice details | Validate before paying |
+
+### Quick Integration Patterns
+
+#### Basic Web App Setup
 
 ```python
 from lexe_wrapper import LexeManager
@@ -87,7 +208,10 @@ lexe.start_for_webapp()  # Robust startup with error handling
 def create_invoice():
     response = requests.post("http://localhost:5393/v1/node/create_invoice", 
                            json=request.json)
-    return response.json()
+    invoice_data = response.json()
+    # ALWAYS save the index for payment tracking!
+    save_to_database(invoice_data['index'], invoice_data['invoice'])
+    return invoice_data
 
 # Stop when app shuts down
 lexe.stop_sidecar()
@@ -532,6 +656,25 @@ def create_invoice(amount: int, description: str = "Payment"):
         raise HTTPException(500, str(e))
 ```
 
+### Complete Flask Example with Real-Time Monitoring
+
+We've included a **production-ready Flask application** that demonstrates proper payment tracking:
+
+```bash
+# Run the complete example
+python examples/flask_payment_app.py
+```
+
+This example includes:
+- ✅ Correct use of `index` field for payment tracking
+- ✅ Background thread monitoring for payment completion
+- ✅ SQLite database for payment storage
+- ✅ Web UI with real-time status updates
+- ✅ Proper error handling and timeouts
+- ✅ Clear documentation of the critical integration points
+
+See [`examples/flask_payment_app.py`](examples/flask_payment_app.py) for the complete implementation.
+
 ### Web App Best Practices
 
 1. **Startup Pattern**: Use `start_for_webapp()` during app initialization
@@ -539,6 +682,7 @@ def create_invoice(amount: int, description: str = "Payment"):
 3. **Recovery**: Use `restart_if_needed()` for automatic recovery
 4. **Shutdown**: Ensure `stop_sidecar()` is called when your app shuts down
 5. **Direct API Usage**: Once started, use standard HTTP requests to `localhost:5393`
+6. **Payment Tracking**: ALWAYS save the `index` field and use it for status checks
 
 ### Process Management for Production
 
